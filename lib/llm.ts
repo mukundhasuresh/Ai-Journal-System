@@ -19,6 +19,8 @@ You must respond with strict JSON matching this TypeScript type:
 
 Respond with JSON only. Do not include any extra text or formatting.`;
 
+const analysisCache = new Map<string, EmotionAnalysisResult>();
+
 export async function analyzeEmotionWithLLM(
   text: string,
 ): Promise<EmotionAnalysisResult> {
@@ -26,11 +28,19 @@ export async function analyzeEmotionWithLLM(
     throw new Error("Text is required for analysis");
   }
 
+  const cacheKey = text.trim();
+  const cached = analysisCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
     throw new Error("No LLM API key configured");
   }
 
   const prompt = `Journal entry:\n"""${text}"""\n\nReturn the JSON response now.`;
+
+  let result: EmotionAnalysisResult;
 
   if (OPENROUTER_API_KEY) {
     const response = await axios.post(
@@ -53,30 +63,33 @@ export async function analyzeEmotionWithLLM(
 
     const content =
       response.data?.choices?.[0]?.message?.content ?? "{}";
-    return safeParseResult(content);
+    result = safeParseResult(content);
+  } else {
+    const groqResponse = await axios.post(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        model: "llama-3.1-70b-versatile",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.2,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const groqContent =
+      groqResponse.data?.choices?.[0]?.message?.content ?? "{}";
+    result = safeParseResult(groqContent);
   }
 
-  // Fallback to Groq if configured and OpenRouter is not
-  const groqResponse = await axios.post(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      model: "llama-3.1-70b-versatile",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    },
-  );
-
-  const groqContent = groqResponse.data?.choices?.[0]?.message?.content ?? "{}";
-  return safeParseResult(groqContent);
+  analysisCache.set(cacheKey, result);
+  return result;
 }
 
 function safeParseResult(raw: string): EmotionAnalysisResult {
