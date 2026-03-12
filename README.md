@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## AI Journal System
 
-## Getting Started
+AI Journal System is a fullstack Next.js 14 application where users complete immersive ambience sessions (forest, ocean, mountain) and write a short journal entry afterward. The system stores these entries, analyzes their emotional tone using an LLM, and surfaces insights about the user’s mental state over time.
 
-First, run the development server:
+The stack:
+
+- **Frontend**: Next.js 14 (App Router), React, TailwindCSS
+- **Backend**: Next.js API Routes
+- **Database**: SQLite via Prisma ORM
+- **LLM**: OpenRouter or Groq API
+
+---
+
+## Project structure
+
+Key files and folders:
+
+- `app/page.tsx` – main journal UI (textarea, ambience dropdown, submit/analyze buttons, entries list, insights panel)
+- `components/JournalForm.tsx` – journal entry form and “analyze” button
+- `components/EntryList.tsx` – list of previous entries
+- `components/InsightsPanel.tsx` – long‑term and latest‑analysis insights
+- `app/api/journal/route.ts` – `POST /api/journal` to store a new entry
+- `app/api/journal/[userId]/route.ts` – `GET /api/journal/:userId` to list entries
+- `app/api/journal/analyze/route.ts` – `POST /api/journal/analyze` for LLM emotion analysis
+- `app/api/journal/insights/[userId]/route.ts` – `GET /api/journal/insights/:userId` for aggregate insights
+- `lib/db.ts` – Prisma client singleton
+- `lib/llm.ts` – LLM integration + in‑memory caching for repeated analysis
+- `lib/insights.ts` – logic to compute insights from journal entries
+- `prisma/schema.prisma` – Prisma schema, including `JournalEntry` model
+
+---
+
+## Setup instructions
+
+1. **Clone the repository**
+
+```bash
+git clone <your-repo-url>
+cd Ai-Journal-System
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Configure environment variables**
+
+Create a `.env` file in the project root (if it does not already exist):
+
+```bash
+DATABASE_URL="file:./dev.db"
+
+# At least one of these must be set for LLM analysis:
+OPENROUTER_API_KEY="your-openrouter-api-key"
+GROQ_API_KEY="your-groq-api-key"
+```
+
+4. **Run database migrations**
+
+The Prisma schema already includes the `JournalEntry` model. To ensure the SQLite database is in sync:
+
+```bash
+npx prisma migrate dev
+```
+
+This will create or update `dev.db` according to `prisma/schema.prisma`.
+
+---
+
+## Running the project
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open `http://localhost:3000` in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The main page lets you:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Choose an ambience (`forest`, `ocean`, `mountain`)
+- Write a journal entry
+- **Save entry** (stores it in SQLite via Prisma)
+- **Analyze emotions** (calls the LLM analysis API)
+- View your **recent entries**
+- See **long‑term insights** and the **latest analysis**
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## API endpoints
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+All endpoints are relative to the Next.js dev server (e.g. `http://localhost:3000`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **POST `/api/journal`**
+  - **Description**: Store a new journal entry.
+  - **Body**:
+    ```json
+    {
+      "userId": "123",
+      "ambience": "forest",
+      "text": "I felt calm today after listening to the rain."
+    }
+    ```
+  - **Response**: The created `JournalEntry` record.
 
-## Deploy on Vercel
+- **GET `/api/journal/:userId`**
+  - **Description**: Get all entries for a user, most recent first.
+  - **Response**: `JournalEntry[]`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **POST `/api/journal/analyze`**
+  - **Description**: Analyze a piece of text with the configured LLM.
+  - **Body**:
+    ```json
+    {
+      "text": "I felt calm today after listening to the rain."
+    }
+    ```
+  - **Response**:
+    ```json
+    {
+      "emotion": "calm",
+      "keywords": ["rain", "relief", "quiet"],
+      "summary": "You describe feeling calm and soothed after listening to the rain."
+    }
+    ```
+  - Includes in‑memory caching: repeated calls with identical `text` reuse the last result instead of calling the LLM again.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **GET `/api/journal/insights/:userId`**
+  - **Description**: Compute aggregate insights for a user’s entries.
+  - **Response**:
+    ```json
+    {
+      "totalEntries": 12,
+      "topEmotion": "calm",
+      "mostUsedAmbience": "forest",
+      "recentKeywords": ["rain", "work", "tired", "focus"]
+    }
+    ```
+
+---
+
+## Development notes
+
+- The project assumes a simple single‑user demo setup on the frontend (`userId = "demo-user-1"`), but the backend APIs are multi‑user capable via `userId`.
+- LLM usage is abstracted in `lib/llm.ts` so you can easily swap models or providers.
+- Insights logic is centralized in `lib/insights.ts` to keep API routes thin.
