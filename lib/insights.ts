@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import type { prisma as prismaInstance } from "./db";
 
 type PrismaClient = typeof prismaInstance;
