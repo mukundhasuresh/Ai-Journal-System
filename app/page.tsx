@@ -67,14 +67,14 @@ export default function Home() {
       <main className="mx-auto flex max-w-4xl flex-col gap-6 lg:flex-row">
         {/* Left column: heading + form + entries */}
         <section className="flex-1 space-y-5">
-          <header className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+          <header className="space-y-2 rounded-2xl bg-slate-900 px-4 py-4 text-slate-50 sm:px-5 sm:py-5">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
               AI Journal
             </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               A calm space to reflect after every ambience session.
             </h1>
-            <p className="max-w-xl text-sm text-slate-500">
+            <p className="max-w-xl text-sm text-slate-200">
               Choose an ambience, write a short entry, and let gentle AI insights
               help you notice emotional patterns over time.
             </p>
@@ -122,15 +122,7 @@ export default function Home() {
             <InsightsPanel insights={insights} lastAnalysis={lastAnalysis} />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-xs text-slate-500 shadow-sm backdrop-blur">
-            <p className="font-medium text-slate-900">
-              Designed to stay out of your way.
-            </p>
-            <p className="mt-1">
-              Mobile‑first layout, clear typography, and a quiet visual style so
-              your words — not the interface — are what you notice.
-            </p>
-          </div>
+          {/* Secondary copy removed per design request */}
         </aside>
       </main>
     </div>
