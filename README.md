@@ -141,6 +141,23 @@ All endpoints are relative to the Next.js dev server (e.g. `http://localhost:300
     ```
 
 ---
+---
+
+## Architecture
+
+System architecture and design decisions are explained in:
+
+ARCHITECTURE.md
+
+This document describes:
+
+- Scaling the system to **100k users**
+- Strategies to **reduce LLM costs**
+- **Caching mechanisms** for repeated analysis
+- Methods to **protect sensitive journal data**
+
+---
+
 
 ## Development notes
 
