@@ -62,13 +62,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen px-4 py-6 text-slate-900"
-      style={{
-        background:
-          "radial-gradient(circle at top, #ffffff 0%, #f5f5f7 55%, #e5e7eb 100%)",
-      }}
-    >
+    <div className="min-h-screen px-4 py-6 text-slate-900 bg-gradient-to-b from-white via-slate-50 to-slate-200">
       <main className="mx-auto flex max-w-4xl flex-col gap-6 lg:flex-row">
         {/* Left column */}
         <section className="flex-1 space-y-5">
