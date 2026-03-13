@@ -20,13 +20,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          background:
+            "radial-gradient(circle at top, #ffffff 0%, #f5f5f7 55%, #e5e7eb 100%)",
+        }}
       >
         {children}
       </body>
